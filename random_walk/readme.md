@@ -1,4 +1,4 @@
 # Random Walk
-model
-simulation
-data processing
+create models for random walks
+do some simulation and data processing
+use matplotlib to visualize them
