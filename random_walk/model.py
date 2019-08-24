@@ -1,6 +1,6 @@
 """ Model """
 
-from random import randint
+from random import choice
 from math import sqrt
 
 
@@ -26,10 +26,21 @@ class Compass(object):
     """ direction and distance of the next movement """
     # poss_dire = ['N', 'S', 'W', 'E']
 
-    def __init__(self):
+    def __init__(self, p_type):
+        self.p_type = p_type
         self.tx = 0
         self.ty = 0
         self.tdist = 1
+        if p_type == 'normal':
+            self.poss_dire = ['N', 'S', 'W', 'E']
+        elif p_type == 'swe':
+            # SWEPlayer
+            self.poss_dire = ['S', 'W', 'E']
+        elif p_type == 'se':
+            # SEPlayer
+            self.poss_dire = ['S', 'E']
+        else:
+            self.poss_dire = ['N', 'S', 'W', 'E']
 
     def get_dire(self):
         """ get tx and ty """
@@ -41,14 +52,17 @@ class Compass(object):
 
     def update_dire(self):
         """ update direction """
-        dire = randint(1, 4)
-        if dire == 1:
-            self.tx, self.ty = (0, self.tdist)
-        elif dire == 2:
+        dire = choice(self.poss_dire)
+        if dire == 'N':
+            if self.p_type == 'ln':
+                self.tx, self.ty = (0, 2 * self.tdist)
+            else:
+                self.tx, self.ty = (0, self.tdist)
+        elif dire == 'S':
             self.tx, self.ty = (0, -self.tdist)
-        elif dire == 3:
+        elif dire == 'W':
             self.tx, self.ty = (-self.tdist, 0)
-        elif dire == 4:
+        elif dire == 'E':
             self.tx, self.ty = (self.tdist, 0)
         else:
             raise ValueError("In Compass, get_dire")
@@ -56,24 +70,25 @@ class Compass(object):
 
 class Map(object):
     """ Map """
-    def __init__(self):
-        pass
+    def __init__(self, p_type):
+        self.p_type = p_type
 
     def move_point(self, old_point, compass):
         ox, oy = old_point.get_xy()
         tx, ty = compass.get_dire()
-        ox -= tx
-        oy -= ty
+        ox += tx
+        oy += ty
         return Point(ox, oy)
 
 
 class Player(object):
     """ Player """
-    def __init__(self, name='unknown'):
+    def __init__(self, name='unknown', p_type='normal'):
         self.name = name
-        self.map = Map()
+        self.p_type = p_type
+        self.map = Map(p_type)
         self.location = Point(0, 0)
-        self.compass = Compass()
+        self.compass = Compass(p_type)
         self.distance = 0
 
     def get_name(self):
@@ -94,9 +109,28 @@ class Player(object):
         self.distance = self.location.get_dist()
 
 
+class SEPlayer(Player):
+    """ SE player, cannot go north and west """
+    def __init__(self, name):
+        super().__init__(name, 'se')
+
+
+class SWEPlayer(Player):
+    """ SWE player, cannot go north"""
+    def __init__(self, name):
+        super().__init__(name, 'swe')
+
+
+class LoveNorthPlayer(Player):
+    """ love north player, go north fast"""
+    def __init__(self, name):
+        super().__init__(name, 'ln')
+
+
 def test():
-    walk_times = 10
-    p1 = Player('John')
+    walk_times = 3
+    p1 = SWEPlayer('John')
+    p2 = SWEPlayer('John')
     print(p1.get_dist())
     distances = []
     x_list, y_list = [], []
@@ -110,7 +144,20 @@ def test():
     print(distances)
     print(x_list)
     print(y_list)
+    distances = []
+    x_list, y_list = [], []
+
+    for _ in range(walk_times):
+        p2.move()
+        x, y = p2.get_loc()
+        x_list.append(x)
+        y_list.append(y)
+        distances.append(p2.get_dist())
+
+    print(distances)
+    print(x_list)
+    print(y_list)
 
 
-# if __name__ == "__main__":
-#     test()
+if __name__ == "__main__":
+    test()
